@@ -244,12 +244,14 @@ const parseApiResponse = (apiData: any, from: string, to: string, mode: string) 
       // Debug each leg
       legs.forEach((leg: any, legIndex: number) => {
         const isWalking = leg.transportation?.product?.class === 100;
-        const isTrain = leg.transportation?.product?.class === 1;
+        const isTrainClass = leg.transportation?.product?.class === 1;
+        const nameOrDesc = (leg.transportation?.product?.name || leg.transportation?.description || '').toString();
+        const isTrainByName = /train/i.test(nameOrDesc);
         let transportType = 'unknown';
         
         if (isWalking) {
           transportType = 'walking';
-        } else if (isTrain) {
+        } else if (isTrainClass || isTrainByName) {
           transportType = leg.transportation?.product?.name || leg.transportation?.description || 'train';
         } else {
           transportType = leg.transportation?.product?.name || leg.transportation?.description || 'other';
@@ -262,7 +264,7 @@ const parseApiResponse = (apiData: any, from: string, to: string, mode: string) 
         });
         
         // Debug platform information in detail for transport legs
-        if (leg.transportation && leg.transportation.product && leg.transportation.product.class === 1) {
+        if (leg.transportation && (isTrainClass || isTrainByName)) {
           console.log(`    Train leg - Origin platform info:`, {
             platform: leg.origin?.platform,
             platformName: leg.origin?.platformName,
@@ -279,9 +281,12 @@ const parseApiResponse = (apiData: any, from: string, to: string, mode: string) 
       });
       
       // Find train transport legs only (exclude walking and others)
-      const transportLegs = legs.filter((leg: any) => 
-        leg.transportation && leg.transportation.product && leg.transportation.product.class === 1
-      );
+      const transportLegs = legs.filter((leg: any) => {
+        if (!leg.transportation) return false;
+        const productClass = leg.transportation.product?.class;
+        const nameOrDesc = (leg.transportation.product?.name || leg.transportation.description || '').toString();
+        return productClass === 1 || /train/i.test(nameOrDesc);
+      });
       
       console.log(`  Transport legs: ${transportLegs.length}, Total legs: ${legs.length}`);
       
@@ -348,9 +353,7 @@ const parseApiResponse = (apiData: any, from: string, to: string, mode: string) 
 
       // Count actual train service changes (not walking)
       const trainLegs = transportLegs.filter((leg: any) => 
-        leg.transportation?.product?.class === 1 || 
-        leg.transportation?.description?.includes('Train') ||
-        leg.transportation?.product?.name?.includes('Train')
+        leg.transportation && (leg.transportation?.product?.class === 1 || /train/i.test((leg.transportation?.product?.name || leg.transportation?.description || '').toString()))
       );
       const changes = Math.max(0, trainLegs.length - 1);
 
@@ -420,12 +423,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     const requestTime = datetime ? new Date(datetime) : new Date();
     
+    // Use Australia/Sydney timezone for date/time to avoid region-based "no results" issues
+    const dt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Australia/Sydney',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).formatToParts(requestTime);
+    const get = (type: string) => dt.find(p => p.type === type)?.value || '';
+    const itdDate = `${get('year')}${get('month')}${get('day')}`;
+    const itdTime = `${get('hour')}${get('minute')}${get('second')}`;
+    
     // Try using coordinates instead since station names aren't being recognized
     const params = {
       outputFormat: 'rapidJSON',
       depArrMacro: 'dep',
-      itdDate: requestTime.toISOString().split('T')[0].replace(/-/g, ''),
-      itdTime: requestTime.toTimeString().split(' ')[0].replace(/:/g, ''),
+      itdDate,
+      itdTime,
       type_origin: 'coord',
       name_origin: `${fromCoords.lng}:${fromCoords.lat}:EPSG:4326`,
       type_destination: 'coord', 
@@ -446,7 +464,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Authorization': `apikey ${TFNSW_API_KEY}`,
         'Accept': 'application/json'
       },
-      timeout: 10000
+      timeout: 15000
     });
 
     console.log('TfNSW API Response Status:', response.status);
