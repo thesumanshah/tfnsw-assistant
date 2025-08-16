@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
-const TFNSW_API_KEY = process.env.TFNSW_API_KEY;
+const TFNSW_API_KEY = process.env.TFNSW_API_KEY || process.env.NEXT_PUBLIC_TFNSW_API_KEY;
 const TFNSW_API_URL = 'https://api.transport.nsw.gov.au/v1/tp/trip';
 
 interface JourneyRequest {
@@ -482,7 +482,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       params,
       headers: {
         'Authorization': `apikey ${TFNSW_API_KEY}`,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Language': 'en-AU,en;q=0.9',
+        'User-Agent': 'tfnsw-assistant/1.0 (+https://transport-nsw-chatbot.vercel.app)'
       },
       timeout: 15000
     });
@@ -530,6 +532,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(503).json({
       error: 'Unable to fetch real-time journey information',
       details: error.message,
+      upstreamStatus: error.response?.status || null,
       from,
       to,
       mode,
