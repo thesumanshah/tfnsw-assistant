@@ -396,6 +396,26 @@ const parseApiResponse = (apiData: any, from: string, to: string, mode: string) 
   }
 };
 
+const normalizeStation = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/\bstation\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const resolveStationCoords = (name: string) => {
+  if (!name) return undefined;
+  // direct match first
+  if (stationCoordinates[name]) return stationCoordinates[name];
+  const norm = normalizeStation(name);
+  for (const key of Object.keys(stationCoordinates)) {
+    if (normalizeStation(key) === norm) {
+      return stationCoordinates[key];
+    }
+  }
+  return undefined;
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -411,8 +431,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'TfNSW API key not configured' });
   }
 
-  const fromCoords = stationCoordinates[from];
-  const toCoords = stationCoordinates[to];
+  const fromCoords = resolveStationCoords(from);
+  const toCoords = resolveStationCoords(to);
 
   if (!fromCoords || !toCoords) {
     return res.status(400).json({ error: 'Invalid station names' });
