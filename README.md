@@ -1,224 +1,209 @@
-# NSW PWA Train Assistant
+# 🚂 TfNSW Real-time Journey Planner
 
-A Progressive Web App (PWA) for NSW train travel assistance, featuring natural language chat interface, real-time journey planning, and offline support.
+A comprehensive real-time public transport journey planner for Sydney, NSW. Get live train schedules, platform information, and journey planning with actual TfNSW API data.
 
-![NSW Train Assistant](public/icons/icon-192.png)
+## ✨ Features
 
-## Features
+- 🔴 **Real-time Journey Planning** - Live TfNSW API integration
+- 🚉 **Accurate Platform Numbers** - Shows actual platform assignments
+- ⚡ **Fast Performance** - Optimized Next.js PWA
+- 📱 **Mobile-First Design** - Responsive on all devices
+- 🌟 **Beautiful UI** - Animated starfield background
+- 🔍 **Station Search** - 200+ Sydney train stations
+- ❤️ **Favorites** - Save frequently used routes
+- 🔄 **Offline Support** - PWA with service worker
 
-- **🤖 AI-Powered Chat Interface**: Natural language understanding for journey queries
-- **🚆 Real-time Journey Planning**: Live data from Transport for NSW API
-- **📱 Progressive Web App**: Installable on mobile devices with offline support
-- **🌐 Multi-Platform**: Telegram bot integration for messaging platform access
-- **🎨 Modern Dark UI**: Beautiful glassmorphism design with shadcn/ui components
-- **🔄 Sync UI**: Chat and manual picker stay in sync
-- **📍 Station Autocomplete**: Quick station selection with mode toggle (Train/Metro/Bus/Ferry)
-- **⚡ Quick Actions**: Swap stations, view map, set alerts with one tap
+## 🚀 Quick Deploy to Vercel
 
-## Tech Stack
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thesumanshah/tfnsw-assistant)
 
-- **Frontend**: Next.js 15.4, TypeScript, Tailwind CSS, shadcn/ui
-- **APIs**: OpenAI GPT-3.5, Transport for NSW Open Data
-- **PWA**: next-pwa, Service Worker with offline caching
-- **Deployment**: Vercel (recommended)
+### Required Environment Variables
 
-## Prerequisites
+1. **Get a TfNSW API Key**: 
+   - Register at [TfNSW Open Data Hub](https://opendata.transport.nsw.gov.au/)
+   - Create an application to get your API key
 
-- Node.js 18+
-- npm or yarn
-- API Keys:
-  - Perplexity API key OR OpenAI API key (for natural language understanding)
-  - Transport for NSW API key
-  - Telegram Bot Token (optional)
-
-## Setup Instructions
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/nsw-pwa-train-assistant.git
-   cd nsw-pwa-train-assistant
+2. **Set Environment Variables in Vercel**:
+   ```
+   TFNSW_API_KEY=your_tfnsw_api_key_here
+   NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
    ```
 
-2. **Install dependencies**
+3. **Optional Variables**:
+   ```
+   OPENAI_API_KEY=your_openai_key_for_ai_features
+   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+   ```
+
+## 🛠️ Local Development
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/thesumanshah/tfnsw-assistant.git
+   cd tfnsw-assistant
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Configure environment variables**
-   Create a `.env.local` file in the root directory:
-   ```env
-   # Perplexity API Key (recommended - more cost-effective)
-   # Get yours at: https://www.perplexity.ai/settings/api
-   PERPLEXITY_API_KEY=pplx-your-perplexity-api-key
-
-   # OR OpenAI API Key (alternative)
-   # Get yours at: https://platform.openai.com/api-keys
-   OPENAI_API_KEY=sk-your-openai-api-key
-
-   # Transport for NSW API Key (required)
-   TFNSW_API_KEY=your-tfnsw-api-key
-
-   # Telegram Bot Token (optional)
-   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-
-   # Your app URL (for Telegram webhook)
-   NEXT_PUBLIC_URL=https://your-app-url.vercel.app
+3. **Set up environment variables**:
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your actual API keys
    ```
 
-4. **Run development server**
+4. **Run the development server**:
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000)
 
-## Getting API Keys
+5. **Open [http://localhost:3000](http://localhost:3000)** in your browser
 
-### Perplexity API Key (Recommended)
-1. Visit [Perplexity AI Settings](https://www.perplexity.ai/settings/api)
-2. Sign up or log in
-3. Generate an API key
-4. More cost-effective than OpenAI for this use case
+## 🐛 Troubleshooting Deployment Issues
 
-### OpenAI API Key (Alternative)
-1. Visit [OpenAI Platform](https://platform.openai.com/)
-2. Sign up or log in
-3. Navigate to API keys section
-4. Create a new API key
+### Issue 1: "No journey information found" on Vercel
 
-### Transport for NSW API Key
-1. Visit [TfNSW Open Data](https://opendata.transport.nsw.gov.au/)
-2. Register for an account
-3. Create a new application
-4. Copy the API key
+**Cause**: Missing or incorrect API key configuration
 
-### Telegram Bot Setup (Optional)
-1. Message [@BotFather](https://t.me/botfather) on Telegram
-2. Create a new bot with `/newbot`
-3. Copy the bot token
-4. Set webhook URL: `https://your-app-url.vercel.app/api/telegram`
+**Solutions**:
+1. Verify API key is set in Vercel dashboard: `Settings > Environment Variables`
+2. Ensure the key name is exactly `TFNSW_API_KEY`
+3. Redeploy after adding environment variables
+4. Check API key is valid at [TfNSW Portal](https://opendata.transport.nsw.gov.au/applications)
 
-## PWA Installation
+### Issue 2: Hydration Mismatch Errors
 
-### iOS
-1. Open the app in Safari
-2. Tap the Share button
-3. Select "Add to Home Screen"
-4. Tap "Add"
+**Cause**: Server/client rendering differences
 
-### Android
-1. Open the app in Chrome
-2. Tap the menu (three dots)
-3. Select "Add to Home Screen"
-4. Tap "Add"
+**Solutions**:
+- ✅ **Fixed**: Updated `ShootingStarsBackground.tsx` with proper client-side mounting
+- ✅ **Fixed**: Added seeded random for consistent SSR
+- ✅ **Fixed**: Proper `isMounted` state handling
 
-## Usage Examples
+### Issue 3: Build Failures
 
-### Chat Interface
-- "Next train from Central to Parramatta"
-- "How do I get to Circular Quay?"
-- "Show me buses from Town Hall to Bondi Junction"
-- "Ferry times to Manly"
-
-### Manual Station Picker
-1. Select transport mode (Train/Metro/Bus/Ferry)
-2. Choose departure station
-3. Choose arrival station
-4. Click Search
-
-### Quick Actions
-- **Swap**: Reverse the journey direction
-- **Map**: View route on map (coming soon)
-- **Alert**: Set notifications for delays (coming soon)
-
-## Project Structure
-
-```
-├── app/                    # Next.js app directory
-│   ├── components/        # React components
-│   │   ├── ui/           # shadcn/ui components
-│   │   ├── ChatWindow.tsx
-│   │   ├── StationPicker.tsx
-│   │   └── ...
-│   ├── lib/              # Utilities
-│   └── page.tsx          # Main page
-├── pages/api/            # API routes
-│   ├── intent.ts        # NLU processing
-│   ├── journey.ts       # TfNSW integration
-│   ├── fallback.ts      # Offline data
-│   └── telegram.ts      # Telegram webhook
-├── public/              # Static assets
-│   ├── icons/          # PWA icons
-│   ├── stations/       # Station data
-│   └── manifest.json   # PWA manifest
-└── next.config.mjs     # Next.js + PWA config
-```
-
-## Deployment
-
-### Vercel (Recommended)
-1. Push to GitHub
-2. Import project in Vercel
-3. Add environment variables
-4. Deploy
-
-### Manual Deployment
+**Common fixes**:
 ```bash
-npm run build
-npm start
+# Clear Next.js cache
+rm -rf .next
+
+# Clear npm cache
+npm cache clean --force
+
+# Reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-## API Reference
+## 📚 API Documentation
 
-### POST /api/intent
-Extract journey intent from natural language
-```json
-{
-  "text": "Next train from Central to Chatswood"
-}
-```
+### Journey Planning Endpoint
 
-### POST /api/journey
-Get journey information
-```json
+```typescript
+POST /api/journey
 {
   "from": "Central",
-  "to": "Chatswood",
+  "to": "Parramatta", 
   "mode": "train",
-  "datetime": "2024-01-13T10:00:00Z"
+  "datetime": "2024-01-01T10:00:00Z" // optional
 }
 ```
 
-### POST /api/telegram
-Webhook endpoint for Telegram bot
+### Response Format
 
-## Offline Support
+```typescript
+{
+  "results": [
+    {
+      "departureTime": "2024-01-01T10:05:00Z",
+      "arrivalTime": "2024-01-01T10:30:00Z", 
+      "duration": 25,
+      "changes": 0,
+      "isQuickest": true,
+      "legs": [
+        {
+          "mode": "train",
+          "line": "Sydney Trains",
+          "departure": {
+            "time": "2024-01-01T10:05:00Z",
+            "platform": "23",
+            "stop": "Central"
+          },
+          "arrival": {
+            "time": "2024-01-01T10:30:00Z", 
+            "platform": "2",
+            "stop": "Parramatta"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
-The app caches:
-- App shell and static assets
-- Last queried journey data
-- Station list for autocomplete
+## 🏗️ Architecture
 
-Offline fallback provides:
-- Basic schedule data
-- Common route information
-- Cached journey results
+```
+├── app/                    # Next.js App Router
+│   ├── components/         # React components
+│   │   ├── ChatWindow.tsx     # Main chat interface
+│   │   ├── StationPicker.tsx  # Station selection
+│   │   └── ShootingStarsBackground.tsx # Animated background
+│   ├── lib/               # Utility libraries
+│   └── hooks/             # Custom React hooks
+├── pages/api/             # API routes
+│   ├── journey.ts         # Main journey planning
+│   ├── intent.ts          # AI intent parsing
+│   └── telegram.ts        # Telegram bot integration
+├── public/               # Static assets
+└── .github/workflows/    # GitHub Actions CI/CD
+```
 
-## Contributing
+## 🚀 Deployment Options
+
+### Vercel (Recommended)
+- One-click deployment
+- Automatic CI/CD
+- Built-in analytics
+- Global CDN
+
+### Docker
+```bash
+docker build -t tfnsw-assistant .
+docker run -p 3000:3000 -e TFNSW_API_KEY=your_key tfnsw-assistant
+```
+
+### Other Platforms
+- **Railway**: `railway login && railway deploy`
+- **Render**: Connect GitHub repo and deploy
+- **Netlify**: Deploy from Git with build command `npm run build`
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a pull request
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -m 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## Support
+## 🆘 Support
 
-For issues and feature requests, please use the GitHub issues page.
+- **Issues**: [GitHub Issues](https://github.com/thesumanshah/tfnsw-assistant/issues)
+- **TfNSW API**: [Documentation](https://opendata.transport.nsw.gov.au/documentation)
+- **Vercel Support**: [Help Center](https://vercel.com/help)
+
+## 🙏 Acknowledgments
+
+- Transport for NSW for providing the open data API
+- Next.js team for the amazing framework
+- Vercel for hosting and deployment platform
 
 ---
 
-Built with ❤️ for NSW commuters
+**Made with ❤️ for Sydney commuters** 🚂

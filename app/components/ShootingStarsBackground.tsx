@@ -29,8 +29,16 @@ export default function ShootingStarsBackground({
   const [stars, setStars] = useState<Star[]>([]);
   const [shootingStars, setShootingStars] = useState<Star[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch by only mounting on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!isMounted) return;
+    
     const updateDimensions = () => {
       setDimensions({
         width: window.innerWidth,
@@ -41,23 +49,30 @@ export default function ShootingStarsBackground({
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+  }, [isMounted]);
 
   useEffect(() => {
-    if (dimensions.width === 0 || dimensions.height === 0) return;
+    if (!isMounted || dimensions.width === 0 || dimensions.height === 0) return;
+
+    // Use seeded random for consistent server/client rendering
+    let seed = 123456789;
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
 
     // Generate static twinkling stars
     const newStars: Star[] = [];
     for (let i = 0; i < starCount; i++) {
       newStars.push({
         id: i,
-        x: Math.random() * dimensions.width,
-        y: Math.random() * dimensions.height,
-        size: Math.random() * 3 + 1,
-        speed: Math.random() * 0.5 + 0.1,
-        angle: Math.random() * Math.PI * 2,
-        opacity: Math.random(),
-        color: colors[Math.floor(Math.random() * colors.length)],
+        x: seededRandom() * dimensions.width,
+        y: seededRandom() * dimensions.height,
+        size: seededRandom() * 3 + 1,
+        speed: seededRandom() * 0.5 + 0.1,
+        angle: seededRandom() * Math.PI * 2,
+        opacity: seededRandom(),
+        color: colors[Math.floor(seededRandom() * colors.length)],
         trail: []
       });
     }
@@ -66,56 +81,38 @@ export default function ShootingStarsBackground({
     // Generate shooting stars
     const newShootingStars: Star[] = [];
     for (let i = 0; i < shootingStarCount; i++) {
-      newShootingStars.push(createShootingStar(i, dimensions));
+      newShootingStars.push(createShootingStar(i, dimensions, seededRandom));
     }
     setShootingStars(newShootingStars);
-  }, [dimensions, starCount, shootingStarCount, colors]);
+  }, [dimensions, starCount, shootingStarCount, colors, isMounted]);
 
-  const createShootingStar = (id: number, dims: { width: number; height: number }): Star => {
-    const startSide = Math.floor(Math.random() * 4);
-    let x, y, angle;
-
-    switch (startSide) {
-      case 0: // Top
-        x = Math.random() * dims.width;
-        y = -50;
-        angle = Math.PI / 4 + (Math.random() - 0.5) * Math.PI / 6;
-        break;
-      case 1: // Right
-        x = dims.width + 50;
-        y = Math.random() * dims.height;
-        angle = Math.PI * 3/4 + (Math.random() - 0.5) * Math.PI / 6;
-        break;
-      case 2: // Bottom
-        x = Math.random() * dims.width;
-        y = dims.height + 50;
-        angle = -Math.PI / 4 + (Math.random() - 0.5) * Math.PI / 6;
-        break;
-      default: // Left
-        x = -50;
-        y = Math.random() * dims.height;
-        angle = Math.PI / 4 + (Math.random() - 0.5) * Math.PI / 6;
-    }
-
+  const createShootingStar = (id: number, dims: { width: number; height: number }, randomFn = Math.random): Star => {
+    const startFromLeft = randomFn() > 0.5;
+    const x = startFromLeft ? -50 : dims.width + 50;
+    const y = randomFn() * dims.height;
+    
     return {
-      id,
+      id: id + 1000,
       x,
       y,
-      size: Math.random() * 2 + 2,
-      speed: Math.random() * 3 + 4,
-      angle,
+      size: randomFn() * 2 + 2,
+      speed: randomFn() * 3 + 2,
+      angle: startFromLeft ? randomFn() * 0.5 + 0.25 : randomFn() * 0.5 + 2.6,
       opacity: 1,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: colors[Math.floor(randomFn() * colors.length)],
       trail: []
     };
   };
 
   useEffect(() => {
+    if (!isMounted) return;
+
     const animateStars = () => {
+      const now = Date.now();
       setStars(prevStars => 
         prevStars.map(star => ({
           ...star,
-          opacity: Math.sin(Date.now() * 0.001 + star.id) * 0.5 + 0.5
+          opacity: Math.sin(now * 0.001 + star.id) * 0.5 + 0.5
         }))
       );
 
@@ -152,7 +149,12 @@ export default function ShootingStarsBackground({
 
     const interval = setInterval(animateStars, 16);
     return () => clearInterval(interval);
-  }, [dimensions, colors]);
+  }, [dimensions, colors, isMounted]);
+
+  // Don't render anything until mounted on client
+  if (!isMounted) {
+    return <div className={`fixed inset-0 overflow-hidden pointer-events-none ${className}`} />;
+  }
 
   return (
     <div className={`fixed inset-0 overflow-hidden pointer-events-none ${className}`}>
@@ -160,107 +162,53 @@ export default function ShootingStarsBackground({
         width={dimensions.width}
         height={dimensions.height}
         className="absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse at bottom, #0d1117 0%, #010409 100%)' }}
       >
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge> 
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-          <filter id="shootingGlow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge> 
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Static twinkling stars */}
-        {stars.map(star => (
+        {/* Twinkling stars */}
+        {stars.map((star) => (
           <circle
-            key={`star-${star.id}`}
+            key={star.id}
             cx={star.x}
             cy={star.y}
             r={star.size}
             fill={star.color}
-            opacity={star.opacity * 0.8}
-            filter="url(#glow)"
+            opacity={star.opacity}
+            className="animate-pulse"
           />
         ))}
-
+        
         {/* Shooting stars */}
-        {shootingStars.map(star => (
-          <g key={`shooting-${star.id}`}>
+        {shootingStars.map((star) => (
+          <g key={star.id}>
             {/* Trail */}
             {star.trail.map((point, index) => (
               <circle
-                key={`trail-${star.id}-${index}`}
+                key={`${star.id}-trail-${index}`}
                 cx={point.x}
                 cy={point.y}
-                r={star.size * (1 - index * 0.05)}
+                r={Math.max(0.5, star.size * (1 - index * 0.1))}
                 fill={star.color}
-                opacity={point.opacity * 0.3}
-                filter="url(#shootingGlow)"
+                opacity={point.opacity}
               />
             ))}
-            
-            {/* Main shooting star */}
+            {/* Main star */}
             <circle
               cx={star.x}
               cy={star.y}
               r={star.size}
               fill={star.color}
               opacity={star.opacity}
-              filter="url(#shootingGlow)"
             />
-            
-            {/* Shooting star streak */}
-            <line
-              x1={star.x}
-              y1={star.y}
-              x2={star.x - Math.cos(star.angle) * 30}
-              y2={star.y - Math.sin(star.angle) * 30}
-              stroke={star.color}
-              strokeWidth="2"
-              opacity={star.opacity * 0.6}
-              filter="url(#shootingGlow)"
+            {/* Glow effect */}
+            <circle
+              cx={star.x}
+              cy={star.y}
+              r={star.size * 2}
+              fill={star.color}
+              opacity={star.opacity * 0.3}
+              filter="blur(2px)"
             />
           </g>
         ))}
-
-        {/* Nebula effect */}
-        <defs>
-          <radialGradient id="nebula1" cx="30%" cy="30%" r="40%">
-            <stop offset="0%" stopColor="#4c1d95" stopOpacity="0.1"/>
-            <stop offset="100%" stopColor="#4c1d95" stopOpacity="0"/>
-          </radialGradient>
-          <radialGradient id="nebula2" cx="70%" cy="60%" r="35%">
-            <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.08"/>
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
-          </radialGradient>
-          <radialGradient id="nebula3" cx="20%" cy="80%" r="30%">
-            <stop offset="0%" stopColor="#1e40af" stopOpacity="0.06"/>
-            <stop offset="100%" stopColor="#1e40af" stopOpacity="0"/>
-          </radialGradient>
-        </defs>
-        
-        <rect width="100%" height="100%" fill="url(#nebula1)" />
-        <rect width="100%" height="100%" fill="url(#nebula2)" />
-        <rect width="100%" height="100%" fill="url(#nebula3)" />
-
-        {/* Constellation lines */}
-        <defs>
-          <pattern id="constellation" patternUnits="userSpaceOnUse" width="300" height="300">
-            <line x1="50" y1="50" x2="150" y2="100" stroke="#4c1d95" strokeWidth="0.5" opacity="0.3"/>
-            <line x1="150" y1="100" x2="200" y2="200" stroke="#4c1d95" strokeWidth="0.5" opacity="0.3"/>
-            <line x1="100" y1="150" x2="250" y2="150" stroke="#4c1d95" strokeWidth="0.5" opacity="0.3"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#constellation)" opacity="0.4" />
       </svg>
     </div>
   );

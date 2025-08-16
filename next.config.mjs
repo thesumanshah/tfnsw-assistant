@@ -1,24 +1,55 @@
-import withPWA from '@ducanh2912/next-pwa';
+import withPWAInit from "@ducanh2912/next-pwa";
 
-const pwaConfig = {
-  dest: 'public',
-  register: true,
-  runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/api\.transport\.nsw\.gov\.au\/.*$/,
-      handler: 'NetworkFirst',
-      options: { cacheName: 'tfnsw-api', networkTimeoutSeconds: 5 }
-    },
-    {
-      urlPattern: ({ request }) => request.destination === 'document',
-      handler: 'NetworkFirst',
-      options: { cacheName: 'pages' }
-    }
-  ]
-};
+const withPWA = withPWAInit({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+  }
+});
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: { typedRoutes: true }
+  env: {
+    TFNSW_API_KEY: process.env.TFNSW_API_KEY,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+  },
+  experimental: {
+    esmExternals: false,
+  },
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    return config;
+  },
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,POST,PUT,DELETE,OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+        ],
+      },
+    ];
+  },
 };
 
-export default withPWA(pwaConfig)(nextConfig);
+export default withPWA(nextConfig);
