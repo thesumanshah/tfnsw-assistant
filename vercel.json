@@ -1,13 +1,16 @@
 {
   "functions": {
     "pages/api/telegram.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "regions": ["syd1"]
     },
     "pages/api/journey.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "regions": ["syd1"]
     },
     "pages/api/intent.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "regions": ["syd1"]
     }
   },
   "headers": [
