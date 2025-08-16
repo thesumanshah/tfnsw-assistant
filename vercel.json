@@ -1,0 +1,38 @@
+{
+  "functions": {
+    "pages/api/telegram.ts": {
+      "maxDuration": 30
+    },
+    "pages/api/journey.ts": {
+      "maxDuration": 30
+    },
+    "pages/api/intent.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/telegram",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/telegram",
+      "destination": "/api/telegram"
+    }
+  ]
+} 
