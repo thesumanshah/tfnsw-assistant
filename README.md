@@ -61,87 +61,6 @@ A comprehensive real-time public transport journey planner for Sydney, NSW. Get 
 
 5. **Open [http://localhost:3000](http://localhost:3000)** in your browser
 
-## 🐛 Troubleshooting Deployment Issues
-
-### Issue 1: "No journey information found" on Vercel
-
-**Cause**: Missing or incorrect API key configuration
-
-**Solutions**:
-1. Verify API key is set in Vercel dashboard: `Settings > Environment Variables`
-2. Ensure the key name is exactly `TFNSW_API_KEY`
-3. Redeploy after adding environment variables
-4. Check API key is valid at [TfNSW Portal](https://opendata.transport.nsw.gov.au/applications)
-
-### Issue 2: Hydration Mismatch Errors
-
-**Cause**: Server/client rendering differences
-
-**Solutions**:
-- ✅ **Fixed**: Updated `ShootingStarsBackground.tsx` with proper client-side mounting
-- ✅ **Fixed**: Added seeded random for consistent SSR
-- ✅ **Fixed**: Proper `isMounted` state handling
-
-### Issue 3: Build Failures
-
-**Common fixes**:
-```bash
-# Clear Next.js cache
-rm -rf .next
-
-# Clear npm cache
-npm cache clean --force
-
-# Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## 📚 API Documentation
-
-### Journey Planning Endpoint
-
-```typescript
-POST /api/journey
-{
-  "from": "Central",
-  "to": "Parramatta", 
-  "mode": "train",
-  "datetime": "2024-01-01T10:00:00Z" // optional
-}
-```
-
-### Response Format
-
-```typescript
-{
-  "results": [
-    {
-      "departureTime": "2024-01-01T10:05:00Z",
-      "arrivalTime": "2024-01-01T10:30:00Z", 
-      "duration": 25,
-      "changes": 0,
-      "isQuickest": true,
-      "legs": [
-        {
-          "mode": "train",
-          "line": "Sydney Trains",
-          "departure": {
-            "time": "2024-01-01T10:05:00Z",
-            "platform": "23",
-            "stop": "Central"
-          },
-          "arrival": {
-            "time": "2024-01-01T10:30:00Z", 
-            "platform": "2",
-            "stop": "Parramatta"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
 
 ## 🏗️ Architecture
 
@@ -180,13 +99,6 @@ docker run -p 3000:3000 -e TFNSW_API_KEY=your_key tfnsw-assistant
 - **Render**: Connect GitHub repo and deploy
 - **Netlify**: Deploy from Git with build command `npm run build`
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -m 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a pull request
 
 ## 📄 License
 
@@ -195,8 +107,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 🆘 Support
 
 - **Issues**: [GitHub Issues](https://github.com/thesumanshah/tfnsw-assistant/issues)
-- **TfNSW API**: [Documentation](https://opendata.transport.nsw.gov.au/documentation)
-- **Vercel Support**: [Help Center](https://vercel.com/help)
 
 ## 🙏 Acknowledgments
 
