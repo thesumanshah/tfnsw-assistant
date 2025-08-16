@@ -3,7 +3,6 @@ import withPWAInit from "@ducanh2912/next-pwa";
 const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
   disable: process.env.NODE_ENV === "development",
@@ -18,9 +17,6 @@ const nextConfig = {
     TFNSW_API_KEY: process.env.TFNSW_API_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
-  },
-  experimental: {
-    esmExternals: false,
   },
   webpack: (config) => {
     config.resolve.fallback = {
